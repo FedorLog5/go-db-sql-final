@@ -16,7 +16,7 @@ func (s ParcelStore) Add(p Parcel) (int, error) {
 	query := `INSERT INTO parcel (client, status, address, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))`
 	result, err := s.db.Exec(query, p.Client, p.Status, p.Address)
 	if err != nil {
-		return 0, nil
+		return 0, err
 	}
 
 	id, err := result.LastInsertId()
@@ -35,8 +35,9 @@ func (s ParcelStore) Get(number int) (Parcel, error) {
 	p := Parcel{}
 	err := row.Scan(&p.Number, &p.Client, &p.Status, &p.Address, &p.CreatedAt)
 	if err != nil {
-		return Parcel{}, sql.ErrNoRows
+		return Parcel{}, err
 	}
+
 	return p, nil
 }
 
@@ -59,6 +60,10 @@ func (s ParcelStore) GetByClient(client int) ([]Parcel, error) {
 			return nil, err
 		}
 		res = append(res, p)
+	}
+	
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	return res, nil
 }
